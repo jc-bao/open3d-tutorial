@@ -110,9 +110,9 @@ def update_posegraph_for_scene(s, t, transformation, information, odometry,
 
 
 def register_point_cloud_pair(ply_file_names, s, t, config):
-  print("reading %s ..." % ply_file_names[s])
+  print(f"reading {ply_file_names[s]} ...")
   source = o3d.io.read_point_cloud(ply_file_names[s])
-  print("reading %s ..." % ply_file_names[t])
+  print(f"reading {ply_file_names[t]} ...")
   target = o3d.io.read_point_cloud(ply_file_names[t])
   (source_down, source_fpfh) = preprocess_point_cloud(source, config)
   (target_down, target_fpfh) = preprocess_point_cloud(target, config)

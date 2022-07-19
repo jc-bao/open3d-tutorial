@@ -119,7 +119,7 @@ if __name__ == "__main__":
   print("====================================")
   print("Elapsed time (in h:m:s)")
   print("====================================")
-  print("- Making fragments    %s" % datetime.timedelta(seconds=times[0]))
+  print(f"- Making fragments    {datetime.timedelta(seconds=times[0])}")
   print("- Register fragments  %s" % datetime.timedelta(seconds=times[1]))
   print("- Refine registration %s" % datetime.timedelta(seconds=times[2]))
   print("- Integrate frames    %s" % datetime.timedelta(seconds=times[3]))
