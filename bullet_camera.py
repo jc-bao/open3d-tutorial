@@ -25,11 +25,11 @@ def main():
   for i in range(60):
     theta = i * np.pi / 30
     viewMatrix = p.computeViewMatrix(
-      cameraEyePosition=[0.6*np.cos(theta), 0.6*np.sin(theta), 0.6],
+      cameraEyePosition=[0.707/2*np.cos(theta), 0.707/2*np.sin(theta), 0.707/2],
       cameraTargetPosition=[0, 0, 0],
       cameraUpVector=[0, 0, 1])
     projectionMatrix = p.computeProjectionMatrixFOV(
-      fov=45.0,
+      fov=90.0,
       aspect=1.0,
       nearVal=0.2,
       farVal=3.0)
