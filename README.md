@@ -29,3 +29,12 @@ import open3d as o3d
 x = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
 o3d.io.write_pinhole_camera_intrinsic("test.json", x)
 ```
+
+## TODO List
+
+- [ ] Reconstruct object from camera
+  - [x] Reconstruct from RGBD image (2022.07.20)
+  - [ ] Reconstruct from Depth image
+    - [ ] Direct reconstruction
+    - [ ] Reconstruct with esitimation of camera position
+- [ ] Reconstruct object from tactile sensor
