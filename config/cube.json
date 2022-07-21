@@ -1,0 +1,17 @@
+{
+    "name": "Open3D reconstruction tutorial",
+    "path_dataset": "data/cube/",
+    "path_intrinsic": "data/cube/bullet_cam.json",
+    "voxel_size": 0.05,
+    "preference_loop_closure_odometry": 0.1,
+    "preference_loop_closure_registration": 5.0,
+    "tsdf_cubic_size": 3.0,
+    "icp_method": "point_to_point",
+    "global_registration": "ransac",
+    "python_multi_threading": true,
+    "n_frames_per_fragment": 60,
+    "min_depth": 0.2,
+    "max_depth": 3.0,
+    "depth_scale": 23405.71428571,
+    "max_depth_diff": 0.05
+}

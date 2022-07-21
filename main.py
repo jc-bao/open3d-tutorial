@@ -18,7 +18,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Reconstruction system")
-  parser.add_argument("--config", help="path to the config file", default="config.json")
+  parser.add_argument("--config", help="path to the config file", default="config/cube.json")
   parser.add_argument("--make",
                       help="Step 1) make fragments from RGBD sequence.",
                       action="store_true")

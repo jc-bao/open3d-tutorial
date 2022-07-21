@@ -38,9 +38,13 @@ def main():
       height=1024,
       viewMatrix=viewMatrix,
       projectionMatrix=projectionMatrix)
-    depth = Image.fromarray(np.uint16((1-depthImg)*65535), mode='I;16')
+    depthImg_filter = np.uint16(depthImg*65535)
+    depthImg_filter[depthImg>=65534] = 0
+    depth = Image.fromarray(depthImg_filter, mode='I;16')
     depth.save(f'data/cube/depth/depth{i+1}.png')
-    rgb = Image.fromarray(rgbImg, mode='RGBA').convert('RGB')
+    # rgb = Image.fromarray(rgbImg, mode='RGBA').convert('RGB')
+    # rgb.save(f'data/cube/image/rgb{i+1}.jpg')
+    rgb = Image.fromarray(np.uint8(depthImg*256), mode='L').convert('RGB')
     rgb.save(f'data/cube/image/rgb{i+1}.jpg')
 
 
