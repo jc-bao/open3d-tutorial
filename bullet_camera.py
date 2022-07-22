@@ -46,10 +46,9 @@ def main():
     # rgb = Image.fromarray(rgbImg, mode='RGBA').convert('RGB')
     # rgb.save(f'data/cube/image/rgb{i+1}.jpg')
     rgb = np.uint8(depthImg*256)
-    edges = cv2.Canny(rgb, 10, 10)
-    cv2.imwrite(f'data/cube/image/edges{i+1}.png', 255-edges)
-    # rgb = Image.fromarray(rgb, mode='L').convert('RGB')
-    # rgb.save(f'data/cube/image/rgb{i+1}.jpg')
+    rgb = 255 - cv2.Canny(rgb, 8, 8)
+    rgb = Image.fromarray(rgb, mode='L').convert('RGB')
+    rgb.save(f'data/cube/image/rgb{i+1}.jpg')
 
 
 if __name__ == '__main__':
