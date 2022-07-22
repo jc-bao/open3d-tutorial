@@ -2,7 +2,8 @@ from re import L
 import numpy as np
 import pybullet as p
 import matplotlib.pyplot as plt
-from PIL import Image
+from PIL import Image, ImageFilter
+import cv2
 
 def main():
   client = p.connect(p.DIRECT)
@@ -44,8 +45,11 @@ def main():
     depth.save(f'data/cube/depth/depth{i+1}.png')
     # rgb = Image.fromarray(rgbImg, mode='RGBA').convert('RGB')
     # rgb.save(f'data/cube/image/rgb{i+1}.jpg')
-    rgb = Image.fromarray(np.uint8(depthImg*256), mode='L').convert('RGB')
-    rgb.save(f'data/cube/image/rgb{i+1}.jpg')
+    rgb = np.uint8(depthImg*256)
+    edges = cv2.Canny(rgb, 10, 10)
+    cv2.imwrite(f'data/cube/image/edges{i+1}.png', 255-edges)
+    # rgb = Image.fromarray(rgb, mode='L').convert('RGB')
+    # rgb.save(f'data/cube/image/rgb{i+1}.jpg')
 
 
 if __name__ == '__main__':
