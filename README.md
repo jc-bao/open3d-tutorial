@@ -38,6 +38,9 @@
 * loop closure worker
 * dense mapping worker
 
+### Q&A
+* When doing ICP, how many previous frames are used to compare?
+
 ## Camera setup
 
 Method1: Calulate directly
@@ -68,4 +71,5 @@ o3d.io.write_pinhole_camera_intrinsic("test.json", x)
   - [ ] Reconstruct from Depth image
     - [ ] Direct reconstruction
     - [ ] Reconstruct with esitimation of camera position
+    - [ ] Reconstruct with limited camera angle
 - [ ] Reconstruct object from tactile sensor
