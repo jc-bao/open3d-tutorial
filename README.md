@@ -1,5 +1,21 @@
 # open3d-tutorial
 
+## How to use
+
+Data collection
+
+```bash
+cd data
+python bullet_collector.py
+```
+
+Dataprocessing
+  
+```bash
+cd pipelines
+python multiway_registration.py
+```
+
 ## Reconstruct objects
 
 1. make fragments (alignment)
@@ -8,6 +24,10 @@
 4. integrate scene (fine alignment)
 
 ## Pipeline
+
+|initial state|after global registration|after local registration|after graph optimization|
+|-----------|-----------------------|-----------------------|-----------------------|
+|![](https://tva1.sinaimg.cn/large/e6c9d24egy1h4is90p9w8j213j0u079b.jpg)|fragments|fragments|fragments|fragments|
 
 * Initial alignment: global registration
  * Algorithm: RANSAC 
@@ -69,8 +89,10 @@ o3d.io.write_pinhole_camera_intrinsic("test.json", x)
 - [ ] Reconstruct object from camera
   - [x] Reconstruct from RGBD image (2022.07.20)
   - [ ] Reconstruct from Depth image
-    - [ ] Camera distortion compensations
-    - [ ] Direct reconstruction
+    - [x] Camera distortion compensations (2022.07.22)
+    - [x] Direct reconstruction (2022.07.22)
     - [ ] Reconstruct with esitimation of camera position
-    - [ ] Reconstruct with limited camera angle
+    - [ ] Camera pose estimation 
+    - [ ] Reconstruct with limited observing angle
+- [ ] Reconstruct object from moving camera
 - [ ] Reconstruct object from tactile sensor

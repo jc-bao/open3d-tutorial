@@ -27,16 +27,17 @@
 
 import open3d as o3d
 import numpy as np
+from tqdm import tqdm
 
 
 def load_point_clouds(voxel_size=0.0):
-  pcd_data = o3d.data.DemoICPPointClouds()
   pcds = []
-  for i in range(3):
-    path = pcd_data.paths[i]
-    path = f'../data/table/{i}.ply'
+  for i in tqdm(range(60)):
+    path = f'../data/cube/cloud/cloud{i}.ply'
     pcd = o3d.io.read_point_cloud(path)
     pcd_down = pcd.voxel_down_sample(voxel_size=voxel_size)
+    pcd_down.estimate_normals(
+      search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
     pcds.append(pcd_down)
   return pcds
 
@@ -64,14 +65,16 @@ def full_registration(pcds, max_correspondence_distance_coarse,
   odometry = np.identity(4)
   pose_graph.nodes.append(o3d.pipelines.registration.PoseGraphNode(odometry))
   n_pcds = len(pcds)
-  for source_id in range(n_pcds):
-    for target_id in range(source_id + 1, n_pcds):
+  matching_num = 5 # matching number for each graph
+  for source_id in tqdm(range(n_pcds)):
+    for target_id in range((source_id - matching_num), source_id):
+      target_id %= n_pcds
       transformation_icp, information_icp = pairwise_registration(
         pcds[source_id], pcds[target_id],
         max_correspondence_distance_coarse,
         max_correspondence_distance_fine)
       print("Build o3d.pipelines.registration.PoseGraph")
-      if target_id == source_id + 1:  # odometry case
+      if target_id == source_id - 1:  # odometry case
         odometry = np.dot(transformation_icp, odometry)
         pose_graph.nodes.append(
           o3d.pipelines.registration.PoseGraphNode(
@@ -94,13 +97,9 @@ def full_registration(pcds, max_correspondence_distance_coarse,
 
 if __name__ == "__main__":
   print('Load point clouds ...')
-  voxel_size = 0.00005
+  voxel_size = 0.0001
   pcds_down = load_point_clouds(voxel_size)
-  o3d.visualization.draw_geometries(pcds_down,
-                                    zoom=1000000,
-                                    front=[0.1, 0.0, 0.0],
-                                    lookat=[0.0, 0.0, 0.0],
-                                    up=[0, 0, 1])
+  # o3d.visualization.draw_geometries(pcds_down, point_show_normal=True)
 
   print("Full registration ...")
   max_correspondence_distance_coarse = voxel_size * 15
@@ -128,4 +127,4 @@ if __name__ == "__main__":
   for point_id in range(len(pcds_down)):
     print(pose_graph.nodes[point_id].pose)
     pcds_down[point_id].transform(pose_graph.nodes[point_id].pose)
-  o3d.visualization.draw(pcds_down)
+  o3d.visualization.draw_geometries(pcds_down)

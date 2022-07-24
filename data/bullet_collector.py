@@ -47,6 +47,7 @@ def main():
     # process image with o3d
     rgbImg = Image.fromarray(rgbImg, mode='RGBA').convert('RGB')
     color = o3d.geometry.Image(np.array(rgbImg))
+    depthImg[depthImg > 0.98] = 0
     depth = o3d.geometry.Image((depthImg*255).astype(np.uint8))
     rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
       color, depth, depth_scale=256/2.8, depth_trunc=0.3, convert_rgb_to_intensity = False)
