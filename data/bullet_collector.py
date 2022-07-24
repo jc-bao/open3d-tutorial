@@ -6,6 +6,7 @@ from pyntcloud import PyntCloud
 from PIL import Image, ImageFilter
 from tqdm import tqdm
 import cv2
+import open3d as o3d
 
 def main():
   client = p.connect(p.DIRECT)
@@ -26,6 +27,7 @@ def main():
     baseOrientation=p.getQuaternionFromEuler([0, 0, 0]))
 
   dist = 0.5
+  pinhole_camera_intrinsic = o3d.io.read_pinhole_camera_intrinsic('cube/bullet_cam.json')
   for i in tqdm(range(60)):
     theta = i * np.pi / 30
     viewMatrix = p.computeViewMatrix(
@@ -42,13 +44,24 @@ def main():
       height=1024,
       viewMatrix=viewMatrix,
       projectionMatrix=projectionMatrix)
+    # process image with o3d
+    rgbImg = Image.fromarray(rgbImg, mode='RGBA').convert('RGB')
+    color = o3d.geometry.Image(np.array(rgbImg))
+    depth = o3d.geometry.Image((depthImg*255).astype(np.uint8))
+    rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+      color, depth, depth_scale=256/2.8, depth_trunc=0.3, convert_rgb_to_intensity = False)
+    pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, pinhole_camera_intrinsic)
+    # save the files
+    o3d.io.write_point_cloud(f'cube/cloud/cloud{i}.ply', pcd, write_ascii=True)
+    o3d.io.write_image(f'cube/image/rgb{i}.jpg', color)
+    o3d.io.write_image(f'cube/depth/depth{i}.png', depth)
+    '''
     # depth image
     depthImg_filter = np.uint16(depthImg*65535)
     depthImg_filter[depthImg>=65534] = 0
     depth = Image.fromarray(depthImg_filter, mode='I;16')
     depth.save(f'cube/depth/depth{i+1}.png')
     # rgb image
-    rgb = Image.fromarray(rgbImg, mode='RGBA').convert('RGB')
     rgb.save(f'cube/image/rgb{i+1}.jpg')
     # point cloud
     local_points = depthImg * 2.8 + 0.2 # convert to real depth/
@@ -62,7 +75,6 @@ def main():
       data=local_points.reshape(-1, 3),
       columns=["x", "y", "z"]))
     cloud.to_file(f"cube/cloud/cloud{i+1}.ply")
-    '''
     # get outline
     rgb = np.uint8(depthImg*256)
     rgb = 255 - cv2.Canny(rgb, 8, 8)
