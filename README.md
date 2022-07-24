@@ -9,27 +9,26 @@
 
 ## Pipeline
 
-* The Composition of Pipeline
-  * Initial alignment: global registration
-    * Algorithm: RANSAC 
-      * Process:
-        * Down sample: Get 33-dimantional FPFH features
-        * Prune impossible matches (based on point, edge, normal etc.)
-      * Hyperparamters:
-        * RANSACConvergenceCriteria
-    * Algorithm: Fast global registration
-  * Fine alignment: local registration
-    * Algorithm: ICP
-      * categories: point-to-point, point-to-plane
-      * difference:
-        * point-to-point: directly matching points
-        * point-to-plane: making sure close points are on the same plane (need to provide point cloud normal)
-      * deal with outlier (noisy points): using Robust Kernel Smoothing (RKS)
-  * Integrate scene: pose graph optimization
-    * Algorithm: GO
-    * Process:
-      * Rough optimization
-      * Fine optimization after prune matches out of distribution
+* Initial alignment: global registration
+ * Algorithm: RANSAC 
+   * Process:
+     * Down sample: Get 33-dimantional FPFH features
+     * Prune impossible matches (based on point, edge, normal etc.)
+   * Hyperparamters:
+     * RANSACConvergenceCriteria
+ * Algorithm: Fast global registration
+* Fine alignment: local registration
+ * Algorithm: ICP
+   * categories: point-to-point, point-to-plane
+   * difference:
+     * point-to-point: directly matching points
+     * point-to-plane: making sure close points are on the same plane (need to provide point cloud normal)
+   * deal with outlier (noisy points): using Robust Kernel Smoothing (RKS)
+* Integrate scene: pose graph optimization
+ * Algorithm: GO
+ * Process:
+   * Rough optimization
+   * Fine optimization after prune matches out of distribution
 
 ## SLAM
 
