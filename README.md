@@ -69,6 +69,7 @@ o3d.io.write_pinhole_camera_intrinsic("test.json", x)
 - [ ] Reconstruct object from camera
   - [x] Reconstruct from RGBD image (2022.07.20)
   - [ ] Reconstruct from Depth image
+    - [ ] Camera distortion compensations
     - [ ] Direct reconstruction
     - [ ] Reconstruct with esitimation of camera position
     - [ ] Reconstruct with limited camera angle

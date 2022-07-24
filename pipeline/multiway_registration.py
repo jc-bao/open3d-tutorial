@@ -33,7 +33,9 @@ def load_point_clouds(voxel_size=0.0):
   pcd_data = o3d.data.DemoICPPointClouds()
   pcds = []
   for i in range(3):
-    pcd = o3d.io.read_point_cloud(pcd_data.paths[i])
+    path = pcd_data.paths[i]
+    path = f'../data/table/{i}.ply'
+    pcd = o3d.io.read_point_cloud(path)
     pcd_down = pcd.voxel_down_sample(voxel_size=voxel_size)
     pcds.append(pcd_down)
   return pcds
@@ -91,9 +93,14 @@ def full_registration(pcds, max_correspondence_distance_coarse,
 
 
 if __name__ == "__main__":
-  voxel_size = 0.02
+  print('Load point clouds ...')
+  voxel_size = 0.00005
   pcds_down = load_point_clouds(voxel_size)
-  o3d.visualization.draw(pcds_down)
+  o3d.visualization.draw_geometries(pcds_down,
+                                    zoom=1000000,
+                                    front=[0.1, 0.0, 0.0],
+                                    lookat=[0.0, 0.0, 0.0],
+                                    up=[0, 0, 1])
 
   print("Full registration ...")
   max_correspondence_distance_coarse = voxel_size * 15
