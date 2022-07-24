@@ -31,6 +31,14 @@
       * Rough optimization
       * Fine optimization after prune matches out of distribution
 
+## SLAM
+
+* odometry worker
+  * cloud -> motion compensation -> ICP
+* mapping worker
+* loop closure worker
+* dense mapping worker
+
 ## Camera setup
 
 Method1: Calulate directly
