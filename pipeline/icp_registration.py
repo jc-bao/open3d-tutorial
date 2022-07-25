@@ -62,17 +62,32 @@ def point_to_plane_icp(source, target, threshold, trans_init):
 
 
 if __name__ == "__main__":
-  pcd_data = o3d.data.DemoICPPointClouds()
+  voxel_size = 0.00003
   source = o3d.io.read_point_cloud('../data/cube/cloud/cloud7.ply')
-  source = source.estimate_normals(
+  source = source.voxel_down_sample(voxel_size=voxel_size)
+  source.estimate_normals(
       search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.01, max_nn=30))
   target = o3d.io.read_point_cloud('../data/cube/cloud/cloud15.ply')
-  target = target.estimate_normals(
+  target = target.voxel_down_sample(voxel_size=voxel_size)
+  target.estimate_normals(
       search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.01, max_nn=30))
   threshold = 0.02
-  trans_init = np.asarray([[1,0,0,0],
-                           [0,1,0,0],
-                           [0,0,1,0], [0.0, 0.0, 0.0, 1.0]])
+  trans_init = np.asarray([[ 8.35624112e-01, 5.41857808e-01, -9.01246840e-02,  0],
+      [-5.22193591e-01, 8.34526542e-01, 1.75725081e-01, 0.000],
+      [ 1.70429448e-01, -9.97775820e-02,  9.80305176e-01, 0],
+      [ 0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]] )
+  icp_coarse = o3d.pipelines.registration.registration_icp(
+    source, target, voxel_size * 20, trans_init,
+    o3d.pipelines.registration.TransformationEstimationPointToPlane())
+  trans_init = icp_coarse.transformation
+  trans_init = np.asarray(
+    [
+      [0.707,0,-0.707,0.00],
+      [0,1,0,0.00],
+      [0.707,0,0.707,0.00],
+      [0,0,0,1]
+    ]
+  )
   draw_registration_result(source, target, trans_init)
 
   print("Initial alignment")

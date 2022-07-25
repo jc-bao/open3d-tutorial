@@ -34,11 +34,12 @@ def main():
       cameraEyePosition=[dist*0.707*np.cos(theta), dist*0.707*np.sin(theta), dist*0.707],
       cameraTargetPosition=[0, 0, 0],
       cameraUpVector=[0, 0, 1])
+    far, near = 1.0, 0.2
     projectionMatrix = p.computeProjectionMatrixFOV(
       fov=2*np.arctan(0.5/dist)*180/np.pi,
       aspect=1.0,
-      nearVal=0.2+dist-0.5,
-      farVal=3.0+dist-0.5)
+      nearVal=near+dist-0.5,
+      farVal=far+dist-0.5)
     width, height, rgbImg, depthImg, segImg = p.getCameraImage(
       width=1024,
       height=1024,
@@ -47,10 +48,12 @@ def main():
     # process image with o3d
     rgbImg = Image.fromarray(rgbImg, mode='RGBA').convert('RGB')
     color = o3d.geometry.Image(np.array(rgbImg))
-    depthImg[depthImg > 0.98] = 0
+    depth = far * near / (far - (far - near) * depthImg)
+    depthImg = depth/far
+    depthImg[depthImg>0.98] = 0
     depth = o3d.geometry.Image((depthImg*255).astype(np.uint8))
     rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
-      color, depth, depth_scale=256/2.8, depth_trunc=0.3, convert_rgb_to_intensity = False)
+      color, depth, depth_scale=far, depth_trunc=1000, convert_rgb_to_intensity = False)
     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, pinhole_camera_intrinsic)
     # save the files
     o3d.io.write_point_cloud(f'cube/cloud/cloud{i}.ply', pcd, write_ascii=True)
