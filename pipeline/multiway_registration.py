@@ -36,7 +36,7 @@ from tqdm import tqdm
 def load_point_clouds(voxel_size=0.0):
   pcds = []
   for i in tqdm(range(60)):
-    path = f'../data/cube/cloud/cloud{i}.ply'
+    path = f'../data/cube_narrow/cloud/cloud{i}.ply'
     pcd = o3d.io.read_point_cloud(path)
     pcd_down = pcd.voxel_down_sample(voxel_size=voxel_size)
     pcd_down.estimate_normals(
@@ -47,7 +47,6 @@ def load_point_clouds(voxel_size=0.0):
 
 def pairwise_registration(source, target, max_correspondence_distance_coarse,
                           max_correspondence_distance_fine):
-  print("Apply point-to-plane ICP")
   icp_coarse = o3d.pipelines.registration.registration_icp(
     source, target, max_correspondence_distance_coarse, np.identity(4),
     o3d.pipelines.registration.TransformationEstimationPointToPlane())
@@ -68,11 +67,14 @@ def full_registration(pcds, max_correspondence_distance_coarse,
   odometry = np.identity(4)
   pose_graph.nodes.append(o3d.pipelines.registration.PoseGraphNode(odometry))
   n_pcds = len(pcds)
-  matching_num = 5 # matching number for each graph
+  matching_num = 5  # matching number for each graph
   # create render window
   vis = o3d.visualization.Visualizer()
-  vis.create_window(width=256,height=256,visible=False)
+  vis.create_window(width=512, height=512, visible=False)
+  world_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.3)
+  vis.add_geometry(world_frame)
   colors = []
+  cemera_frame = None
   for source_id in tqdm(range(n_pcds)):
     for target_id in range((source_id - matching_num), source_id):
       target_id %= n_pcds
@@ -80,7 +82,6 @@ def full_registration(pcds, max_correspondence_distance_coarse,
         pcds[source_id], pcds[target_id],
         max_correspondence_distance_coarse,
         max_correspondence_distance_fine)
-      print("Build o3d.pipelines.registration.PoseGraph")
       if target_id == source_id - 1:  # odometry case
         odometry = np.dot(transformation_icp, odometry)
         pose_graph.nodes.append(
@@ -99,29 +100,36 @@ def full_registration(pcds, max_correspondence_distance_coarse,
                                                    transformation_icp,
                                                    information_icp,
                                                    uncertain=True))
+    dist = 0.5
     theta = 2*np.pi/n_pcds*source_id
-    dist=0.5
     cam2worldTrans = np.array([
-      [-np.sin(theta), 0.707*np.cos(theta), -0.707*np.cos(theta), dist*0.707*np.cos(theta)],
-      [np.cos(theta),0.707*np.sin(theta) , -0.707*np.sin(theta), dist*0.707*np.sin(theta)],
+      [-np.sin(theta), 0.707*np.cos(theta), -0.707 *
+       np.cos(theta), dist*0.707*np.cos(theta)],
+      [np.cos(theta), 0.707*np.sin(theta), -0.707 *
+       np.sin(theta), dist*0.707*np.sin(theta)],
       [0, -0.707, -0.707, dist*0.707],
       [0, 0, 0, 1]])
-    cemera_frame = o3d.geometry.TriangleMesh.create_coordinate_frame().transform(cam2worldTrans)
-    vis.add_geometry(copy.deepcopy(pcds[source_id]).transform(pose_graph.nodes[source_id].pose))
-    vis.add_geometry(cemera_frame)
-    vis.get_view_control().set_lookat(np.array([0,0,0]))
-    vis.get_view_control().set_front(np.array([1.4*np.cos(theta + np.pi/4),1.4*np.sin(theta + np.pi/4),1]))
-    vis.get_view_control().set_up(np.array([0,0,1]))
+    cemera_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(
+      size=0.08).transform(cam2worldTrans)
+    vis.add_geometry(copy.deepcopy(pcds[source_id]).transform(
+      pose_graph.nodes[source_id].pose))
+    vis.add_geometry(cemera_frame.transform(
+      pose_graph.nodes[source_id].pose))
+    vis.get_view_control().set_lookat(np.array([0, 0, 0]))
+    vis.get_view_control().set_front(
+      np.array([1.4*np.cos(theta + np.pi/4), 1.4*np.sin(theta + np.pi/4), 1]))
+    vis.get_view_control().set_up(np.array([0, 0, 1]))
     vis.get_view_control().set_zoom(1.5)
     color = vis.capture_screen_float_buffer(do_render=True)
-    color = (np.asarray(color)*255).astype(np.uint8) 
+    color = (np.asarray(color)*255).astype(np.uint8)
     colors.append(color)
   imgs = [PIL.Image.fromarray(img) for img in colors]
-  imgs[0].save("image/render.gif", save_all=True, append_images=imgs[1:], duration=50, loop=0)
+  imgs[0].save("image/render.gif", save_all=True,
+               append_images=imgs[1:], duration=50, loop=0)
   skvideo.io.vwrite('image/render.mp4', np.array(colors))
   vis.destroy_window()
   vis.close()
-  return pose_graph
+  return pose_graph, imgs
 
 
 if __name__ == "__main__":
@@ -135,25 +143,58 @@ if __name__ == "__main__":
   max_correspondence_distance_fine = voxel_size * 1.5
   # with o3d.utility.VerbosityContextManager(
   #     o3d.utility.VerbosityLevel.Debug) as cm:
-  pose_graph = full_registration(pcds_down,
-                                  max_correspondence_distance_coarse,
-                                  max_correspondence_distance_fine)
+  pose_graph, imgs = full_registration(pcds_down,
+                                 max_correspondence_distance_coarse,
+                                 max_correspondence_distance_fine)
 
   print("Optimizing PoseGraph ...")
   option = o3d.pipelines.registration.GlobalOptimizationOption(
     max_correspondence_distance=max_correspondence_distance_fine,
     edge_prune_threshold=0.25,
     reference_node=0)
-  with o3d.utility.VerbosityContextManager(
-      o3d.utility.VerbosityLevel.Debug) as cm:
-    o3d.pipelines.registration.global_optimization(
-      pose_graph,
-      o3d.pipelines.registration.GlobalOptimizationLevenbergMarquardt(),
-      o3d.pipelines.registration.GlobalOptimizationConvergenceCriteria(),
-      option)
+  # with o3d.utility.VerbosityContextManager(
+  #     o3d.utility.VerbosityLevel.Debug) as cm:
+  o3d.pipelines.registration.global_optimization(
+    pose_graph,
+    o3d.pipelines.registration.GlobalOptimizationLevenbergMarquardt(),
+    o3d.pipelines.registration.GlobalOptimizationConvergenceCriteria(),
+    option)
+  
 
   print("Transform points and display")
+  vis = o3d.visualization.Visualizer()
+  vis.create_window(width=512, height=512, visible=False)
+  world_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.3)
+  vis.add_geometry(world_frame)
+  dist=0.5
   for point_id in range(len(pcds_down)):
-    print(pose_graph.nodes[point_id].pose)
-    pcds_down[point_id].transform(pose_graph.nodes[point_id].pose)
-  o3d.visualization.draw_geometries(pcds_down)
+    theta = 2*np.pi/len(pcds_down)*point_id
+    cam2worldTrans = np.array([
+      [-np.sin(theta), 0.707*np.cos(theta), -0.707 *
+       np.cos(theta), dist*0.707*np.cos(theta)],
+      [np.cos(theta), 0.707*np.sin(theta), -0.707 *
+       np.sin(theta), dist*0.707*np.sin(theta)],
+      [0, -0.707, -0.707, dist*0.707],
+      [0, 0, 0, 1]])
+    cemera_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(
+      size=0.08).transform(cam2worldTrans)
+    vis.add_geometry(pcds_down[point_id].transform(pose_graph.nodes[point_id].pose))
+    vis.add_geometry(cemera_frame.transform(pose_graph.nodes[point_id].pose))
+  vis.get_view_control().set_lookat(np.array([0, 0, 0]))
+  vis.get_view_control().set_front(
+    np.array([1.4*np.cos(theta + np.pi/4), 1.4*np.sin(theta + np.pi/4), 1]))
+  vis.get_view_control().set_up(np.array([0, 0, 1]))
+  vis.get_view_control().set_zoom(1.5)
+  color = vis.capture_screen_float_buffer(do_render=True)
+  vis.destroy_window()
+  vis.close()
+  color = (np.asarray(color)*255).astype(np.uint8)
+  for _ in range(20):
+    imgs.append(PIL.Image.fromarray(color))
+  imgs[0].save("image/full.gif", save_all=True,
+              append_images=imgs[1:], duration=50, loop=0)
+  
+
+
+
+  # o3d.visualization.draw_geometries(pcds_down)

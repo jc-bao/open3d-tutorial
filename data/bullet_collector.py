@@ -28,7 +28,9 @@ def main():
     baseOrientation=p.getQuaternionFromEuler([0, 0, 0]))
 
   dist = 0.5
-  pinhole_camera_intrinsic = o3d.io.read_pinhole_camera_intrinsic('cube/bullet_cam.json')
+  width = 64
+  height = 1024
+  pinhole_camera_intrinsic = o3d.camera.PinholeCameraIntrinsic(width, height, height/2, height/2, width/2, height/2) 
   for i in tqdm(range(60)):
     theta = i * np.pi / 30
     viewMatrix = p.computeViewMatrix(
@@ -43,12 +45,12 @@ def main():
     far, near = 1.0, 0.2
     projectionMatrix = p.computeProjectionMatrixFOV(
       fov=2*np.arctan(0.5/dist)*180/np.pi,
-      aspect=1.0,
+      aspect=width/height,
       nearVal=near+dist-0.5,
       farVal=far+dist-0.5)
     width, height, rgbImg, depthImg, segImg = p.getCameraImage(
-      width=1024,
-      height=1024,
+      width=width, #1024,
+      height=height,
       viewMatrix=viewMatrix,
       projectionMatrix=projectionMatrix)
     # process image with o3d
@@ -62,36 +64,9 @@ def main():
       color, depth, depth_scale=far, depth_trunc=1000, convert_rgb_to_intensity = False)
     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, pinhole_camera_intrinsic)
     # save the files
-    o3d.io.write_point_cloud(f'cube/cloud/cloud{i}.ply', pcd.transform(cam2worldTrans))
-    o3d.io.write_image(f'cube/image/rgb{i}.jpg', color)
-    o3d.io.write_image(f'cube/depth/depth{i}.png', depth)
-    '''
-    # depth image
-    depthImg_filter = np.uint16(depthImg*65535)
-    depthImg_filter[depthImg>=65534] = 0
-    depth = Image.fromarray(depthImg_filter, mode='I;16')
-    depth.save(f'cube/depth/depth{i+1}.png')
-    # rgb image
-    rgb.save(f'cube/image/rgb{i+1}.jpg')
-    # point cloud
-    local_points = depthImg * 2.8 + 0.2 # convert to real depth/
-    img_size = local_points.shape
-    xx = np.tile(np.arange(img_size[0]) / img_size[0] - 0.5, (img_size[1], 1)).transpose() * 2  # generate x for -1 to 1 (focal length=1)
-    yy = np.tile(np.arange(img_size[1]) / img_size[0] - 0.5 * img_size[1] / img_size[0], (img_size[0], 1)) * 2  # generate y for -1 to 1 (focal length=1) 
-    local_points /= np.sqrt(xx**2 + yy**2 + 1) # normalize
-    local_points = np.stack((xx*dist*local_points, yy*dist*local_points, local_points), axis=-1) # scale x, y according to depth
-    local_points = local_points[local_points[..., -1] < 3.1]
-    cloud = PyntCloud(pd.DataFrame(
-      data=local_points.reshape(-1, 3),
-      columns=["x", "y", "z"]))
-    cloud.to_file(f"cube/cloud/cloud{i+1}.ply")
-    # get outline
-    rgb = np.uint8(depthImg*256)
-    rgb = 255 - cv2.Canny(rgb, 8, 8)
-    rgb = Image.fromarray(rgb, mode='L').convert('RGB')
-    rgb.save(f'data/cube/image/rgb{i+1}.jpg')
-    '''
-
+    o3d.io.write_point_cloud(f'cube_narrow/cloud/cloud{i}.ply', pcd.transform(cam2worldTrans))
+    o3d.io.write_image(f'cube_narrow/image/rgb{i}.jpg', color)
+    o3d.io.write_image(f'cube_narrow/depth/depth{i}.png', depth)
 
 if __name__ == '__main__':
   main()
