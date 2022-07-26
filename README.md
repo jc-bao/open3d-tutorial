@@ -16,6 +16,12 @@ cd pipelines
 python multiway_registration.py
 ```
 
+## Demostrations
+
+|Reconstruct Object from narrow camera angles||
+|-|-|
+|![](https://tva1.sinaimg.cn/large/e6c9d24egy1h4l55w5ubqg20e80e848k.gif)||
+
 ## Reconstruct objects
 
 1. make fragments (alignment)
