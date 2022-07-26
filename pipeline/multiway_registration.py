@@ -99,19 +99,25 @@ def full_registration(pcds, max_correspondence_distance_coarse,
                                                    transformation_icp,
                                                    information_icp,
                                                    uncertain=True))
+    theta = 2*np.pi/n_pcds*source_id
+    dist=0.5
+    cam2worldTrans = np.array([
+      [-np.sin(theta), 0.707*np.cos(theta), -0.707*np.cos(theta), dist*0.707*np.cos(theta)],
+      [np.cos(theta),0.707*np.sin(theta) , -0.707*np.sin(theta), dist*0.707*np.sin(theta)],
+      [0, -0.707, -0.707, dist*0.707],
+      [0, 0, 0, 1]])
+    cemera_frame = o3d.geometry.TriangleMesh.create_coordinate_frame().transform(cam2worldTrans)
     vis.add_geometry(copy.deepcopy(pcds[source_id]).transform(pose_graph.nodes[source_id].pose))
+    vis.add_geometry(cemera_frame)
     vis.get_view_control().set_lookat(np.array([0,0,0]))
-    theta = 2*np.pi/n_pcds*source_id + np.pi/4
-    vis.get_view_control().set_front(np.array([1.4*np.cos(theta),1.4*np.sin(theta),1]))
+    vis.get_view_control().set_front(np.array([1.4*np.cos(theta + np.pi/4),1.4*np.sin(theta + np.pi/4),1]))
     vis.get_view_control().set_up(np.array([0,0,1]))
     vis.get_view_control().set_zoom(1.5)
     color = vis.capture_screen_float_buffer(do_render=True)
     color = (np.asarray(color)*255).astype(np.uint8) 
     colors.append(color)
-    # PIL.Image.fromarray(color, mode='RGB').save(f'image/rgb{source_id}.jpg')
-    # o3d.io.write_image(f'image/rgb{source_id}.jpg', color)
   imgs = [PIL.Image.fromarray(img) for img in colors]
-  imgs[0].save("image/array.gif", save_all=True, append_images=imgs[1:], duration=50, loop=0)
+  imgs[0].save("image/render.gif", save_all=True, append_images=imgs[1:], duration=50, loop=0)
   skvideo.io.vwrite('image/render.mp4', np.array(colors))
   vis.destroy_window()
   vis.close()
