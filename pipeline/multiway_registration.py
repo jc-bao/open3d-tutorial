@@ -27,6 +27,9 @@
 
 import open3d as o3d
 import numpy as np
+import copy
+import PIL
+import skvideo.io
 from tqdm import tqdm
 
 
@@ -66,6 +69,10 @@ def full_registration(pcds, max_correspondence_distance_coarse,
   pose_graph.nodes.append(o3d.pipelines.registration.PoseGraphNode(odometry))
   n_pcds = len(pcds)
   matching_num = 5 # matching number for each graph
+  # create render window
+  vis = o3d.visualization.Visualizer()
+  vis.create_window(width=256,height=256,visible=False)
+  colors = []
   for source_id in tqdm(range(n_pcds)):
     for target_id in range((source_id - matching_num), source_id):
       target_id %= n_pcds
@@ -92,23 +99,39 @@ def full_registration(pcds, max_correspondence_distance_coarse,
                                                    transformation_icp,
                                                    information_icp,
                                                    uncertain=True))
+    vis.add_geometry(copy.deepcopy(pcds[source_id]).transform(pose_graph.nodes[source_id].pose))
+    vis.get_view_control().set_lookat(np.array([0,0,0]))
+    theta = 2*np.pi/n_pcds*source_id + np.pi/4
+    vis.get_view_control().set_front(np.array([1.4*np.cos(theta),1.4*np.sin(theta),1]))
+    vis.get_view_control().set_up(np.array([0,0,1]))
+    vis.get_view_control().set_zoom(1.5)
+    color = vis.capture_screen_float_buffer(do_render=True)
+    color = (np.asarray(color)*255).astype(np.uint8) 
+    colors.append(color)
+    # PIL.Image.fromarray(color, mode='RGB').save(f'image/rgb{source_id}.jpg')
+    # o3d.io.write_image(f'image/rgb{source_id}.jpg', color)
+  imgs = [PIL.Image.fromarray(img) for img in colors]
+  imgs[0].save("image/array.gif", save_all=True, append_images=imgs[1:], duration=50, loop=0)
+  skvideo.io.vwrite('image/render.mp4', np.array(colors))
+  vis.destroy_window()
+  vis.close()
   return pose_graph
 
 
 if __name__ == "__main__":
   print('Load point clouds ...')
-  voxel_size = 0.0001
+  voxel_size = 0.003
   pcds_down = load_point_clouds(voxel_size)
   # o3d.visualization.draw_geometries(pcds_down, point_show_normal=True)
 
   print("Full registration ...")
   max_correspondence_distance_coarse = voxel_size * 15
   max_correspondence_distance_fine = voxel_size * 1.5
-  with o3d.utility.VerbosityContextManager(
-      o3d.utility.VerbosityLevel.Debug) as cm:
-    pose_graph = full_registration(pcds_down,
-                                   max_correspondence_distance_coarse,
-                                   max_correspondence_distance_fine)
+  # with o3d.utility.VerbosityContextManager(
+  #     o3d.utility.VerbosityLevel.Debug) as cm:
+  pose_graph = full_registration(pcds_down,
+                                  max_correspondence_distance_coarse,
+                                  max_correspondence_distance_fine)
 
   print("Optimizing PoseGraph ...")
   option = o3d.pipelines.registration.GlobalOptimizationOption(

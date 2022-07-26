@@ -27,7 +27,7 @@ python multiway_registration.py
 
 |initial state|after global registration|after local registration|after graph optimization|
 |-----------|-----------------------|-----------------------|-----------------------|
-|![](https://tva1.sinaimg.cn/large/e6c9d24egy1h4is90p9w8j213j0u079b.jpg)|fragments|fragments|fragments|fragments|
+|![](https://tva1.sinaimg.cn/large/e6c9d24egy1h4is90p9w8j213j0u079b.jpg)|fragments|fragments|fragments|![](https://tva1.sinaimg.cn/large/e6c9d24egy1h4kw39mql7g2074074h2y.gif)|
 
 * Initial alignment: global registration
  * Algorithm: RANSAC 

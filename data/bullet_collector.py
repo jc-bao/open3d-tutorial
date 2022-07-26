@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from pyntcloud import PyntCloud
 from PIL import Image, ImageFilter
 from tqdm import tqdm
+import copy
 import cv2
 import open3d as o3d
 
@@ -34,6 +35,11 @@ def main():
       cameraEyePosition=[dist*0.707*np.cos(theta), dist*0.707*np.sin(theta), dist*0.707],
       cameraTargetPosition=[0, 0, 0],
       cameraUpVector=[0, 0, 1])
+    cam2worldTrans = np.array([
+      [-np.sin(theta), 0.707*np.cos(theta), -0.707*np.cos(theta), dist*0.707*np.cos(theta)],
+      [np.cos(theta),0.707*np.sin(theta) , -0.707*np.sin(theta), dist*0.707*np.sin(theta)],
+      [0, -0.707, -0.707, dist*0.707],
+      [0, 0, 0, 1]])
     far, near = 1.0, 0.2
     projectionMatrix = p.computeProjectionMatrixFOV(
       fov=2*np.arctan(0.5/dist)*180/np.pi,
@@ -56,7 +62,7 @@ def main():
       color, depth, depth_scale=far, depth_trunc=1000, convert_rgb_to_intensity = False)
     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, pinhole_camera_intrinsic)
     # save the files
-    o3d.io.write_point_cloud(f'cube/cloud/cloud{i}.ply', pcd, write_ascii=True)
+    o3d.io.write_point_cloud(f'cube/cloud/cloud{i}.ply', pcd.transform(cam2worldTrans))
     o3d.io.write_image(f'cube/image/rgb{i}.jpg', color)
     o3d.io.write_image(f'cube/depth/depth{i}.png', depth)
     '''
