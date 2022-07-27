@@ -92,14 +92,14 @@ o3d.io.write_pinhole_camera_intrinsic("test.json", x)
 
 ## TODO List
 
-- [ ] Reconstruct object from camera
+- [x] Reconstruct object from camera
   - [x] Reconstruct from RGBD image (2022.07.20)
-  - [ ] Reconstruct from Depth image
+  - [x] Reconstruct from Depth image
     - [x] Camera distortion compensations (2022.07.22)
     - [x] Direct reconstruction (2022.07.22)
     - [x] Reconstruct with camera position (2022.07.26)
-    - [ ] Reconstruct with noisy camera position
-    - [ ] Reconstruct with limited observing angle
+    - [x] Reconstruct with noisy camera position (2022.07.26)
+    - [x] Reconstruct with limited observing angle (2022.07.26)
 - [ ] Localize camera using ICP
   - [ ] Camera pose estimation 
 - [ ] Reconstruct object from moving camera
