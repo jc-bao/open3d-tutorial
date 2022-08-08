@@ -65,7 +65,12 @@ python multiway_registration.py
 * dense mapping worker
 
 ### Q&A
-* When doing ICP, how many previous frames are used to compare?
+
+Q: When doing ICP, how many previous frames are used to compare?
+
+Q: What is the information matrix about in ICP? Is it a covariant matrix?
+
+A: Yes, it is the covariance of estimated transformaiton and true transformation. 
 
 ## Camera setup
 
